@@ -28,7 +28,7 @@ if not client_id or not client_secret:
     )
 
 # Setup Spotify client with client credentials
-client_credentials_manager = SpotifyClientCredentials(client_id=client_id, client_secret=client_secret)
+client_credentials_manager = SpotifyClientCredentials(client_id="c6d3b47d224f49cf91298d485af8e9ba", client_secret="2e57385a51bc4881ba00340b7719077f")
 sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
 
 print("Spotify client initialized.")
@@ -125,7 +125,8 @@ def get_spotify_recommendations_for_moods(moods):
 @app.route('/recommend', methods=['POST'])
 def recommend():
     user_input = request.form['mood']
-    print(f"Received mood input: {user_input}")
+    selected_character = request.form.get('character', 'yoda')  # Get character, default to Yoda
+    print(f"Received mood input: {user_input} and character: {selected_character}")
 
     if user_input == 'random':
         user_input = random.choice(list(MOOD_TO_ATTRIBUTES.keys()))  # Pick a random mood
@@ -145,8 +146,16 @@ def recommend():
     # Extract song names and artists for the quote
     song_info = ', '.join([f"'{song['name']}' by {song['artist']}" for song in songs[:3]])
 
-    # Generate a Yoda-style quote using Cohere
-    quote_prompt = f"""As Yoda, create a short quote (max two sentences) reflecting the mood '{user_input}' and the following songs: {song_info}. Do wordplay regarding the first songs generated and start and end with 🎵."""
+    # Character-specific prompt for generating quotes
+    character_prompts = {
+        'yoda': f"As Yoda, create a short quote reflecting the mood '{user_input}' and the following songs: {song_info}.",
+        'gandalf': f"As Gandalf, create a wise and inspiring quote reflecting the mood '{user_input}' and the following songs: {song_info}.",
+        'dumbledore': f"As Dumbledore, craft a quote about the mood '{user_input}' with references to the songs: {song_info}.",
+        'terminator': f"As the Terminator, generate a quote reflecting the mood '{user_input}' with a tough tone, referencing these songs: {song_info}.",
+        'homer': f"As Homer Simpson, make a funny or silly quote about the mood '{user_input}' based on these songs: {song_info}.",
+        'shakespeare': f"In Shakespearean style, compose a poetic quote reflecting the mood '{user_input}' and songs: {song_info}."
+    }
+    quote_prompt = character_prompts.get(selected_character, character_prompts['yoda'])
 
     try:
         quote_response = co.generate(
@@ -170,7 +179,8 @@ def recommend():
         'mood': user_input,
         'classified_moods': classified_moods,
         'songs': songs,
-        'quote': quote
+        'quote': quote,
+        'character': selected_character
     })
     session['history'] = session['history'][:10]  # Keep only the latest 10 entries
 
@@ -212,3 +222,4 @@ def index():
 if __name__ == '__main__':
     print("Starting Flask server...")
     app.run(debug=False)
+
