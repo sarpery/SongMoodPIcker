@@ -151,6 +151,7 @@
             color: #ccc;
         }
 
+
         /* Unordered list styling */
         ul {
             list-style-type: none;
@@ -388,9 +389,28 @@
         .slider.round:before {
             border-radius: 50%;
         }
-    </style>
+
+/* Style for the character select dropdown */
+#character-select {
+    font-size: 24px; /* Increase font size */
+    padding: 10px; /* Add padding to make the selection area bigger */
+    border-radius: 10px; /* Rounded corners */
+    background-color: #000; /* Set background to black */
+    color: #1ED760; /* Bright green text for visibility */
+    border: 1px solid #1ED760; /* Add green border */
+    transition: background-color 0.3s ease, color 0.3s ease; /* Smooth transition on hover */
+}
+
+/* Hover effect for the select dropdown */
+#character-select:hover {
+    background-color: #1ED760; /* Change background on hover */
+    color: #000; /* Invert text color on hover */
+}
+
+</style>
 </head>
 <body>
+
 <div class="mode-toggle">
     <label class="switch">
         <input type="checkbox" id="hardcoded-toggle" onchange="toggleMode()">
@@ -416,6 +436,7 @@
     <div class="picker-container">
         <h1>Music Mood Picker</h1>
 
+
         <!-- Emoji buttons directly under the title -->
         <div class="emoji-buttons-container">
             <button class="emoji-button" onclick="submitMood('happy')">😊</button>
@@ -425,7 +446,17 @@
             <button class="emoji-button" onclick="submitMood('random')">🎲</button>
         </div>
 
-        <p>Select your mood or enter it manually!</p>
+        <p>Select your mood or enter it manually! </p>
+        <p>Select a character style for the quote:</p>
+        <label for="character-select"></label><select id="character-select">
+    <option value="yoda">Yoda</option>
+    <option value="gandalf">Gandalf</option>
+    <option value="dumbledore">Dumbledore</option>
+    <option value="terminator">The Terminator</option>
+    <option value="homer">Homer Simpson</option>
+    <option value="shakespeare">Shakespeare</option>
+</select>
+<br><br><br>
 
         <!-- Manual mood input -->
         <form id="mood-form">
@@ -825,34 +856,36 @@
     }
 
     // Function to submit mood and get song recommendations
-    function submitMood(mood) {
-        if (isHardCodedMode) {
-            let songs = hardcodedSongs[mood] || [];
-            let quote = generateYodaQuote(mood); // Function to generate hardcoded quote
-            updateSongsDisplay(mood, songs, quote);
-        } else {
-            const loadingMessage = document.getElementById('loading-message');
-            loadingMessage.textContent = "Getting recommendations...";
+function submitMood(mood) {
+    const selectedCharacter = document.getElementById('character-select').value; // Get selected character
 
-            fetch('/recommend', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `mood=${encodeURIComponent(mood)}`
-            })
-                .then(response => response.json())
-                .then(data => {
-                    loadingMessage.textContent = "";
-                    updateSongsDisplay(data.mood, data.songs, data.quote);
-                    fetchHistory();  // Update history after new recommendation
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    loadingMessage.textContent = "An error occurred. Please try again.";
-                });
-        }
+    if (isHardCodedMode) {
+        let songs = hardcodedSongs[mood] || [];
+        let quote = generateYodaQuote(mood); // Generate hardcoded quote (for Non-AI mode)
+        updateSongsDisplay(mood, songs, quote);
+    } else {
+        const loadingMessage = document.getElementById('loading-message');
+        loadingMessage.textContent = "Getting recommendations...";
+
+        fetch('/recommend', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `mood=${encodeURIComponent(mood)}&character=${encodeURIComponent(selectedCharacter)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            loadingMessage.textContent = "";
+            updateSongsDisplay(data.mood, data.songs, data.quote);
+            fetchHistory();  // Update history after a new recommendation
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            loadingMessage.textContent = "An error occurred. Please try again.";
+        });
     }
+}
 
     // Function to generate a hardcoded Yoda-style quote (for hardcoded mode)
     function generateYodaQuote(mood) {
@@ -889,6 +922,8 @@
         const switchText = document.getElementById('switch-text');
         // Adjust the UI accordingly
         if (isHardCodedMode) {
+            document.getElementById('character-select').style.pointerEvents = 'none';
+        document.getElementById('character-select').selectedIndex = 0; // Index starts from 0
             // Change text to 'Non-AI'
             switchText.textContent = 'Non-AI';
             // Hide the manual mood input form
@@ -899,6 +934,8 @@
             sessionHistory = [];
             updateHistoryDisplay();
         } else {
+            document.getElementById('character-select').style.pointerEvents = 'auto';
+
             // Change text to 'AI'
             switchText.textContent = 'AI';
             // Show the manual mood input form
