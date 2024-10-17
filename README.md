@@ -7,6 +7,7 @@
 ## Features
 
 - **Mood-based Song Recommendations**: Input your mood and receive 10 personalized song recommendations from Spotify.
+- **Quotes by pop culture characters**: See what the wisdom of Yoda or follyness of Homer Simpson has to say about your mood and music recommendations.
 - **Cohere AI Integration**: Use Cohere to classify user input into moods.
 - **Spotify API Integration**: Fetch song recommendations directly from Spotify based on mood attributes (energy, valence, genre).
 - **History Tracking**: View your past mood inputs and recommendations.
